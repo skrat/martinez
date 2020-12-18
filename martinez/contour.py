@@ -1,18 +1,20 @@
 from functools import reduce
 from operator import add
-from typing import (Iterator,
+from typing import (Generic,
+                    Iterator,
                     List)
 
 from reprit.base import generate_repr
 
 from .bounding_box import BoundingBox
+from .hints import T
 from .point import Point
 
 
-class Contour:
+class Contour(Generic[T]):
     __slots__ = '_points', '_holes', 'is_external'
 
-    def __init__(self, points: List[Point], holes: List[int], is_external: bool
+    def __init__(self, points: List[Point[T]], holes: List[int], is_external: bool
                  ) -> None:
         self._points = points
         self._holes = holes
@@ -20,11 +22,11 @@ class Contour:
 
     __repr__ = generate_repr(__init__)
 
-    def __iter__(self) -> Iterator[Point]:
+    def __iter__(self) -> Iterator[Point[T]]:
         return iter(self._points)
 
     @property
-    def points(self) -> List[Point]:
+    def points(self) -> List[Point[T]]:
         return self._points
 
     @property
@@ -58,7 +60,7 @@ class Contour:
                 if isinstance(other, Contour)
                 else NotImplemented)
 
-    def add(self, point: Point) -> None:
+    def add(self, point: Point[T]) -> None:
         self._points.append(point)
 
     def add_hole(self, hole: int) -> None:

@@ -1,21 +1,23 @@
 from operator import attrgetter
+from typing import Generic
 
 from reprit.base import generate_repr
 
+from .hints import T
 from .point import Point
 
 points_key = attrgetter('x', 'y')
 
 
-class Segment:
+class Segment(Generic[T]):
     __slots__ = '_source', '_target'
 
-    def __init__(self, source: Point, target: Point):
+    def __init__(self, source: Point[T], target: Point[T]):
         self._source = source
         self._target = target
 
     @property
-    def source(self) -> Point:
+    def source(self) -> Point[T]:
         return self._source
 
     @property
@@ -48,5 +50,5 @@ class Segment:
         return self._source.x == self._target.x
 
     @property
-    def reversed(self) -> 'Segment':
-        return Segment(self._target, self._source)
+    def reversed(self) -> 'Segment[T]':
+        return Segment[T](self._target, self._source)

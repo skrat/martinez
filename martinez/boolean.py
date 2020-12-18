@@ -5,6 +5,7 @@ from operator import attrgetter
 from reprlib import recursive_repr
 from typing import (Callable,
                     Dict,
+                    Generic,
                     List,
                     Optional,
                     Tuple,
@@ -16,6 +17,9 @@ from reprit import seekers
 from reprit.base import generate_repr
 
 from .contour import Contour
+from .hints import (Scalar,
+                    T,
+                    UserLerp)
 from .point import Point
 from .polygon import Polygon
 from .segment import Segment
@@ -306,18 +310,20 @@ class SweepLineKey:
             return self.event.is_below(other.event.point)
 
 
-class Operation:
-    __slots__ = ('_left', '_right', '_type', '_events_queue', '_resultant',
-                 '_already_run')
+class Operation(Generic[T]):
+    __slots__ = ('_left', '_right', '_type', '_ulerp', '_events_queue',
+                 '_resultant', '_already_run')
 
-    def __init__(self, left: Polygon, right: Polygon,
-                 type_: OperationType) -> None:
+    def __init__(self, left: Polygon[T], right: Polygon[T],
+                 type_: OperationType,
+                 ulerp: Optional[UserLerp]=None) -> None:
         self._left = left
         self._right = right
         self._type = type_
+        self._ulerp = ulerp
         self._events_queue = PriorityQueue(key=EventsQueueKey,
                                            reverse=True)
-        self._resultant = Polygon([])
+        self._resultant = Polygon[T]([])
         self._already_run = False
 
     __repr__ = generate_repr(__init__,
@@ -455,7 +461,7 @@ class Operation:
                               first_event: SweepEvent,
                               second_event: SweepEvent) -> int:
         intersections_count, first_point, second_point = find_intersections(
-                first_event.segment, second_event.segment)
+                first_event.segment, second_event.segment, ulerp=self._ulerp)
 
         if not intersections_count:
             # no intersection
@@ -709,8 +715,9 @@ class Operation:
         return result
 
 
-def compute(left: Polygon, right: Polygon,
-            operation_type: OperationType) -> Polygon:
+def compute(left: Polygon[T], right: Polygon[T],
+            operation_type: OperationType,
+            user_lerp: Optional[UserLerp]=None) -> Polygon[T]:
     operation = Operation(left, right, operation_type)
     operation.run()
     return operation.resultant

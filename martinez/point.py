@@ -1,17 +1,21 @@
 import math
+from typing import Optional, Generic, TypeVar
 
 from reprit.base import generate_repr
 
 from .bounding_box import BoundingBox
-from .hints import Scalar
+from .hints import (Scalar, T)
 
 
-class Point:
-    __slots__ = '_x', '_y'
+T = T
 
-    def __init__(self, x: Scalar, y: Scalar) -> None:
+class Point(Generic[T]):
+    __slots__ = '_x', '_y', '_user'
+
+    def __init__(self, x: Scalar, y: Scalar, user: Optional[T]=None) -> None:
         self._x = x
         self._y = y
+        self._user = user
 
     __repr__ = generate_repr(__init__)
 
@@ -31,6 +35,10 @@ class Point:
     @property
     def y(self) -> Scalar:
         return self._y
+
+    @property
+    def user(self):
+        return self._user
 
     def distance_to(self, other: 'Point') -> Scalar:
         return math.sqrt((self._x - other._x) ** 2 + (self._y - other._y) ** 2)

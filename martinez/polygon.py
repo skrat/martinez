@@ -1,24 +1,26 @@
 from functools import reduce
 from operator import add
 from typing import (Iterator,
+                    Generic,
                     List)
 
 from reprit.base import generate_repr
 
 from .bounding_box import BoundingBox
 from .contour import Contour
+from .hints import T
 
 
-class Polygon:
+class Polygon(Generic[T]):
     __slots__ = '_contours',
 
-    def __init__(self, contours: List[Contour]) -> None:
+    def __init__(self, contours: List[Contour[T]]) -> None:
         self._contours = contours
 
     __repr__ = generate_repr(__init__)
 
     @property
-    def contours(self) -> List[Contour]:
+    def contours(self) -> List[Contour[T]]:
         return self._contours
 
     def __eq__(self, other: 'Polygon') -> bool:
@@ -26,7 +28,7 @@ class Polygon:
                 if isinstance(other, Polygon)
                 else NotImplemented)
 
-    def __iter__(self) -> Iterator[Contour]:
+    def __iter__(self) -> Iterator[Contour[T]]:
         return iter(self._contours)
 
     @property

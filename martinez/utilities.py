@@ -3,7 +3,9 @@ from typing import (Optional,
                     Sequence,
                     Tuple)
 
-from .hints import Scalar
+from .hints import (Scalar,
+                    T,
+                    UserLerp)
 from .point import Point
 from .segment import Segment
 
@@ -39,8 +41,9 @@ def _find_intersections(u0: Scalar, u1: Scalar, v0: Scalar, v1: Scalar
         return 1, first_coefficient, second_coefficient
 
 
-def find_intersections(first_segment: Segment, second_segment: Segment,
+def find_intersections(first_segment: Segment[T], second_segment: Segment[T],
                        *,
+                       ulerp: Optional[UserLerp] = None,
                        threshold: float = 1e-8,
                        squared_inv_epsilon: int = 10 ** 7
                        ) -> Tuple[int, Optional[Point], Optional[Point]]:
@@ -67,8 +70,10 @@ def find_intersections(first_segment: Segment, second_segment: Segment,
         t = (e.x * first_vector.y - e.y * first_vector.x) / cross_product
         if (t < 0) or (t > 1):
             return 0, None, None
-        first_intersection_point = Point(first_source.x + s * first_vector.x,
-                                         first_source.y + s * first_vector.y)
+        first_intersection_point = Point(
+            first_source.x + s * first_vector.x,
+            first_source.y + s * first_vector.y,
+            ulerp(first_source.user, first_target.user, s) if ulerp else None)
         if first_intersection_point.distance_to(first_source) < threshold:
             first_intersection_point = first_source
         elif first_intersection_point.distance_to(first_target) < threshold:
@@ -97,10 +102,12 @@ def find_intersections(first_segment: Segment, second_segment: Segment,
      second_coefficient) = _find_intersections(0, 1, s_min, s_max)
     first_intersection_point = second_intersection_point = None
     if intersections_count:
-        first_intersection_point = Point(first_source.x
-                                         + first_coefficient * first_vector.x,
-                                         first_source.y
-                                         + first_coefficient * first_vector.y)
+        first_intersection_point = Point(
+            first_source.x
+            + first_coefficient * first_vector.x,
+            first_source.y
+            + first_coefficient * first_vector.y,
+            ulerp(first_source.user, first_target.user, first_coefficient) if ulerp else None)
         if first_intersection_point.distance_to(first_source) < threshold:
             first_intersection_point = first_source
         elif first_intersection_point.distance_to(first_target) < threshold:
@@ -110,12 +117,14 @@ def find_intersections(first_segment: Segment, second_segment: Segment,
         elif first_intersection_point.distance_to(second_target) < threshold:
             first_intersection_point = second_target
         if intersections_count > 1:
-            second_intersection_point = Point(first_source.x
-                                              + second_coefficient
-                                              * first_vector.x,
-                                              first_source.y
-                                              + second_coefficient
-                                              * first_vector.y)
+            second_intersection_point = Point(
+                first_source.x
+                + second_coefficient
+                * first_vector.x,
+                first_source.y
+                + second_coefficient
+                * first_vector.y,
+                ulerp(first_source.user, first_target.user, second_coefficient) if ulerp else None)
     return (intersections_count, first_intersection_point,
             second_intersection_point)
 
